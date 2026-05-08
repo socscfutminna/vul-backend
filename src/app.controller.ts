@@ -21,7 +21,7 @@ export class AppController {
 
   @Post('summarize')
   async summarize(@Body('text') text: string) {
-    // ❌ VULNERABILITY: Prompt Injection
+    // ❌ VULNERABILITY: Prompt Injection.
     // Direct concatenation of user input into the prom.
     const prompt = `Please summarize the following text: ${text}`;
     

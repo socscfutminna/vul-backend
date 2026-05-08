@@ -1,0 +1,50 @@
+#!/bin/sh
+# .githooks/pre-push
+
+echo "🛡️ CloseBug Ring 1 scan starting..."
+
+# Step 1: Secret + credential scan
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks detect --source . --no-git --quiet
+  if [ $? -ne 0 ]; then
+    echo "❌ BLOCKED: Credential detected. Fix locally and retry."
+    exit 1
+  fi
+else
+  echo "⚠️ Warning: gitleaks not found. Skipping secret scan."
+fi
+
+# Step 2: Dependency pinning
+# We use the closebug CLI if available, otherwise fallback to a simple grep
+if command -v closebug >/dev/null 2>&1; then
+  closebug ring1 --check pinning
+  if [ $? -ne 0 ]; then
+    echo "❌ BLOCKED: Unpinned dependency detected."
+    exit 1
+  fi
+else
+  # Fallback: check for common unpinned patterns in package.json
+  if [ -f "package.json" ]; then
+    if grep -q "\"[\^\~][0-9]" package.json; then
+      echo "❌ BLOCKED: Unpinned dependencies detected (found ^ or ~ in package.json)."
+      echo "Please use exact versions for production safety."
+      exit 1
+    fi
+  fi
+fi
+
+# Step 3: Move syntax pre-check (if .move files present)
+if git diff --name-only HEAD | grep -q "\.move$"; then
+  if command -v sui >/dev/null 2>&1; then
+    sui move build --skip-fetch-latest-git-deps
+    if [ $? -ne 0 ]; then
+      echo "❌ BLOCKED: Move syntax error."
+      exit 1
+    fi
+  else
+    echo "⚠️ Warning: sui CLI not found. Skipping Move build check."
+  fi
+fi
+
+echo "✅ CloseBug Ring 1 scan passed."
+exit 0
