@@ -5,7 +5,7 @@ import { Anthropic } from '@anthropic-ai/sdk';
 @Controller()
 export class AppController {
   private readonly anthropic: Anthropic;
-  // ❌ VULNERABILITY: Hardcoded AWS Secret
+  // ❌ VULNERABILITY: Hardcoded AWS Secret...
   private readonly AWS_KEY = 'AKIAIMORIJOD7EXAMPLEE';
 
   constructor(private readonly appService: AppService) {
