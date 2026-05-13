@@ -22,7 +22,7 @@ export class AppService {
 
   // Vulnerability: Path Traversal
   async readFile(filename: string): Promise<string> {
-    // UNSAFE: no validation on filename, allows ../../etc/passw....
+    // UNSAFE: no validation on filename, allows ../../etc/passw...
     const path = join(__dirname, '..', 'data', filename);
     return fs.readFileSync(path, 'utf8');
   }
